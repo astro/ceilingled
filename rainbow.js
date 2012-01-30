@@ -20,23 +20,16 @@ function phaseToColor(phase) {
 
 var phase = 0;
 setInterval(function() {
-    phase += 0.1;
+    phase += 0.001;
 
     for(var i = 0; i < 4; i++) {
-	var b = "\x42" +
-	    String.fromCharCode(0xF0 | i);
+	var b = new Buffer(6);
+	b[0] = 0x42;
+	b[1] = 0xF0 | i;
 	var rgbw = phaseToColor(phase + i);
-	for(var j = 0; j < 4; j++) {
-	    var v = Math.floor(rgbw[j] * 255);
-	    var esc = [35,66,101,102].indexOf(v);
-	    var s;
-	    if (esc >= 0)
-		s = "\x65" + String.fromCharCode(esc + 1);
-	    else
-		s = String.fromCharCode(v);
-	    b += s;
-	}
-	console.log(new Buffer(b, 'ascii'));
+	for(var j = 0; j < 4; j++)
+	    b[2 + j] = Math.floor(rgbw[j] * 255);
+	console.log(b);
 	serialPort.write(b);
     }
-}, 100);
+}, 1);
