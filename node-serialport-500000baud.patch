@@ -1,0 +1,23 @@
+diff -urN node-serialport/serialport.js node_modules/serialport/serialport.js
+--- node-serialport/serialport.js	2012-01-30 23:50:05.051509302 +0100
++++ node-serialport/serialport.js	2012-01-30 23:11:17.879204879 +0100
+@@ -11,7 +11,7 @@
+ var serialport_native    = require('./serialport_native');
+ var IOWatcher   = process.binding('io_watcher').IOWatcher;
+ 
+-var BAUDRATES = [115200, 57600, 38400, 19200, 9600, 4800, 2400, 1800, 1200, 600, 300, 200, 150, 134, 110, 75, 50];
++var BAUDRATES = [500000, 115200, 57600, 38400, 19200, 9600, 4800, 2400, 1800, 1200, 600, 300, 200, 150, 134, 110, 75, 50];
+ var DATABITS  = [8, 7, 6, 5];
+ var STOPBITS  = [1, 2];
+ var PARITY    = [0, 1, 2];
+diff -urN node-serialport/serialport_native/serialport_native.cc node_modules/serialport/serialport_native/serialport_native.cc
+--- node-serialport/serialport_native/serialport_native.cc	2012-01-30 23:50:05.051509302 +0100
++++ node-serialport/serialport_native/serialport_native.cc	2012-01-30 23:12:02.912604054 +0100
+@@ -24,6 +24,7 @@
+ 
+   static long GetBaudConstant(long Baud_Rate) {
+     switch (Baud_Rate) {
++      case 500000: return B500000;
+       case 230400: return B230400;
+       case 115200: return B115200;
+       case 57600:  return B57600;
