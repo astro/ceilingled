@@ -23,13 +23,30 @@ setInterval(function() {
     phase += 0.001;
 
     for(var i = 0; i < 4; i++) {
-	var b = new Buffer(6);
-	b[0] = 0x42;
-	b[1] = 0xF0 | i;
+	var b = new Buffer(10), bi = 0;
+	b[bi++] = 0x42;
+	b[bi++] = 0xF0 | i;
 	var rgbw = phaseToColor(phase + i);
-	for(var j = 0; j < 4; j++)
-	    b[2 + j] = Math.floor(rgbw[j] * 255);
-	console.log(b);
+	for(var j = 0; j < 4; j++) {
+	    var value = Math.floor(rgbw[j] * 255);
+	    var escape = 0;
+	    switch(value) {
+		case 0x66:
+		    escape++;
+		case 0x65:
+		    escape++;
+		case 0x42:
+		    escape++;
+		case 0x23:
+		    escape++;
+		    b[bi++] = 0x65;
+		    b[bi++] = escape;
+		    break;
+		default:
+		    b[bi++] = value;
+	    }
+	}
+	b = b.slice(0, bi);
 	serialPort.write(b);
     }
 }, 1);
