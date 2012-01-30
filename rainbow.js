@@ -1,5 +1,11 @@
 var SerialPort = require("serialport").SerialPort;
-var serialPort = new SerialPort("/dev/ttyUSB0", { baudrate: 500000 });
+var serialPort;
+try {
+    serialPort = new SerialPort("/dev/ttyUSB0", { baudrate: 500000 });
+} catch(e) {
+    console.error(e.stack);
+    serialPort = { write: console.log };
+}
 var Buffer = require('buffer').Buffer;
 
 var PHASE_MAX = 4;
