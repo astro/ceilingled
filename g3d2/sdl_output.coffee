@@ -11,6 +11,8 @@ class exports.Output
     constructor: ->
         @screen = SDL.setVideoMode @width * ZOOM, @height * ZOOM, 24, SDL.SURFACE.SWSURFACE
 
+        process.nextTick @loop
+
     width:
         W
 
@@ -25,3 +27,8 @@ class exports.Output
 
     flush: ->
         SDL.flip @screen
+
+    loop: =>
+        @on_drain?()
+        @flush()
+        process.nextTick @loop

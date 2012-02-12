@@ -16,6 +16,10 @@ class Renderer
         canvas = new Canvas @width, @height
         @ctx = canvas.getContext('2d');
 
+        @output.on_drain = =>
+            @on_drain?()
+            @render()
+
     render: ->
         data = @ctx.getImageData(0, 0, @output.width, @output.height)?.data
         #console.log "data", data
@@ -26,7 +30,6 @@ class Renderer
                 offset++
                 #console.log "x", x, "y", y, [r, g, b]
                 @output.putPixel x, y, r, g, b
-        @output.flush()
 
 
 class DrawText
@@ -189,7 +192,8 @@ setInterval ->
     compositor.add new DrawText(pick_randomly "Hello World\nfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrob\n", "\nWe ♥ GNU/Linux", "Umlaute könnten funktionieren", "Foo bar\nprint \"Hello\"\nGOTO 23\n<<</>>")
 , 500
 
-render = ->
+renderer.on_drain = ->
+    console.log "on_drain"
     ctx = renderer.ctx
 
     ctx.fillStyle = '#000'
@@ -198,5 +202,3 @@ render = ->
 
     compositor.tick()
     compositor.draw renderer.ctx
-    renderer.render()
-setInterval render, 50
