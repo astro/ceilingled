@@ -86,11 +86,22 @@ class BlendTransition extends Transition
         ctx.globalAlpha = t
 
 class HorizontalSlideTransition extends Transition
+    constructor: ->
+        super
+
+        @direction = pick_randomly('left', 'right')
+
     prepareA: (ctx, t) ->
-        ctx.translate t * -@width, 0
+        if @direction is 'left'
+            ctx.translate t * @width, 0
+        else
+            ctx.translate t * -@width, 0
 
     prepareB: (ctx, t) ->
-        ctx.translate (1 - t) * @width, 0
+        if @direction is 'left'
+            ctx.translate (1 - t) * -@width, 0
+        else
+            ctx.translate (1 - t) * @width, 0
 
 class VerticalSlideTransition extends Transition
     prepareA: (ctx, t) ->
