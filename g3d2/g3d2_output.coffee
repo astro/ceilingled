@@ -54,21 +54,37 @@ class exports.Output
                     s = "0#{s}"
                 s.slice(s.length - 2)
 
-            buffered = yes
+            flushed = yes
+            to_draw = []
             for x in [0..(@width - 1)]
                 for y in [0..(@height - 1)]
                     if @frame[y][x] isnt @old_frame[y][x]
+                        old_c = @old_frame[y][x]
                         c = @old_frame[y][x] = @frame[y][x]
-                        #console.log "02#{pad x}#{pad y}#{c}"
-                        buffered = @sock.write "02#{pad x}#{pad y}#{c}\r\n", 'binary'
-            buffered
+                        to_draw.push { x, y, c, old_c }
+            count = 0
+            buf = ""
+            while to_draw.length > 0 and count < 160 and flushed
+                i = Math.floor(Math.random() * to_draw.length)
+                { x, y, c } = to_draw[i]
+                to_draw.splice(i, 1)
+                count++
+                buf += "02#{pad x}#{pad y}#{c}\r\n"
+            flushed = @sock.write buf
+            if to_draw.length > 0
+                console.log "#{count} drawn, #{to_draw.length} left"
+                for { x, y, old_c } in to_draw
+                    @old_frame[y][x] = old_c
+            flushed
 
     loop: =>
         lastTick = new Date().getTime()
         @on_drain?()
         if @flush()
             now = new Date().getTime()
-            setTimeout @loop, Math.max(1, 50 - now + lastTick)
+            console.log "frametime", now - lastTick, "ms"
+            process.nextTick @loop
+            #setTimeout @loop, Math.max(1, 20 - now + lastTick)
         else
             @sock.once 'drain', =>
                 console.log "drain"
