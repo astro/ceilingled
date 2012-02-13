@@ -36,9 +36,9 @@ class DrawText
     constructor: (@text) ->
 
     draw: (ctx, t) ->
-        th = 9
-        padding = 4
-        ctx.font = "#{th}px Terminus";
+        th = 18
+        padding = 1
+        ctx.font = "#{th}px Tahoma";
         unless @font_lines?
             @font_lines = []
             for line in @text.split(/\n/)
@@ -146,7 +146,7 @@ class RotateTransition extends Transition
 
 class Compositor
     PHASE: 3000
-    TRANSITION_PHASE: 1000
+    TRANSITION_PHASE: 5000
 
     constructor: (@width, @height) ->
         @current = null
@@ -209,7 +209,7 @@ renderer.on_drain = ->
 
     ctx.fillStyle = '#000'
     ctx.fillRect 0, 0, renderer.width, renderer.height
-    ctx.antialias = 'grey'
+    ctx.antialias = 'none'
 
     compositor.tick()
     compositor.draw renderer.ctx
