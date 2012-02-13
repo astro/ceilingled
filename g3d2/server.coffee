@@ -1,5 +1,5 @@
-{ Output } = require './sdl_output'
-output = new Output()
+#{ Output } = require './sdl_output'
+{ Output } = require './g3d2_output'
 
 Canvas = require('canvas')
 
