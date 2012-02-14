@@ -127,6 +127,8 @@ class exports.RotateTransition extends exports.Transition
         ctx.rotate(a * Math.PI / 2)
         ctx.translate @anti_edge...
 
+        ctx.globalAlpha = 1 - t
+
     prepareB: (ctx, t) ->
         @pick_edge()
 
@@ -137,6 +139,8 @@ class exports.RotateTransition extends exports.Transition
         ctx.translate @edge...
         ctx.rotate(a * Math.PI / 2)
         ctx.translate @anti_edge...
+
+        ctx.globalAlpha = t
 
 
 class exports.Compositor
