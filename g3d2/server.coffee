@@ -209,7 +209,7 @@ renderer.on_drain = ->
 
     ctx.fillStyle = '#000'
     ctx.fillRect 0, 0, renderer.width, renderer.height
-    ctx.antialias = 'none'
+    ctx.antialias = 'grey'
 
     compositor.tick()
     compositor.draw renderer.ctx
