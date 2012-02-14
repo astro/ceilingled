@@ -1,4 +1,5 @@
 net = require 'net'
+{ getNow } = require './util'
 
 class exports.Output
     constructor: (host="g3d2.hq.c3d2.de", port=1339) ->
@@ -38,10 +39,10 @@ class exports.Output
             @sock.write "03#{frame}\r\n"
 
     loop: =>
-        lastTick = new Date().getTime()
+        lastTick = getNow()
         @on_drain?()
         if @flush()
-            now = new Date().getTime()
+            now = getNow()
             console.log "frametime", now - lastTick, "ms"
             #process.nextTick @loop
             setTimeout @loop, 30 #Math.max(0, 20 - now + lastTick)
