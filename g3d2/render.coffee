@@ -41,9 +41,9 @@ class exports.DrawText
         @duration = Math.ceil(Math.max(0, linecount - 2) * 800)
 
     draw: (ctx, t) ->
-        th = 9
+        th = 8
         padding = 6
-        ctx.font = "#{th}px Terminal";
+        ctx.font = "#{th + 1}px Terminal";
         unless @font_lines?
             @font_lines = []
             for line in @text.split(/\n/)
