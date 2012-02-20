@@ -43,7 +43,7 @@ class exports.DrawText
     draw: (ctx, t) ->
         th = 9
         padding = 6
-        ctx.font = "#{th}px Tratexsvart";
+        ctx.font = "#{th}px Terminal";
         unless @font_lines?
             @font_lines = []
             for line in @text.split(/\n/)
@@ -135,7 +135,7 @@ class exports.RotateTransition extends exports.Transition
         #@edge = [0, 0]
         @anti_edge = [-@edge[0], -@edge[1]]
         @direction = pick_randomly 'up', 'down'
-        console.log "edge", @edge, "direction", @direction
+        #console.log "edge", @edge, "direction", @direction
 
     prepareA: (ctx, t) ->
         @pick_edge()
