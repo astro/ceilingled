@@ -213,3 +213,7 @@ class exports.Compositor
         @current?.draw(ctx, @get_t())
         ctx.restore()
 
+        # Display queue length
+        for i in [0..@queue.length]
+            ctx.fillStyle = '#aaa'
+            ctx.fillRect @width - i, @height - 1, 1, 1
