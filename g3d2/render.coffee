@@ -53,9 +53,10 @@ class exports.DrawText
                         i--
                     @font_lines.push(line.slice(0, i))
                     line = line.slice(i)
+            @set_duration @font_lines.length
 
         height = padding * 2 + @font_lines.length * th
-        ctx.translate(0, -t * Math.max(0, height - @height) + padding)
+        ctx.translate(0, Math.ceil(-t * Math.max(0, height - @height) + padding))
         ctx.textBaseline = 'top'
         ctx.fillStyle = '#fff'
         for line in @font_lines
@@ -104,24 +105,24 @@ class exports.HorizontalSlideTransition extends exports.Transition
 
     prepareA: (ctx, t) ->
         if @direction is 'left'
-            ctx.translate t * @width, 0
+            ctx.translate Math.floor(t * @width), 0
         else
-            ctx.translate t * -@width, 0
+            ctx.translate Math.floor(t * -@width), 0
 
     prepareB: (ctx, t) ->
         if @direction is 'left'
-            ctx.translate (1 - t) * -@width, 0
+            ctx.translate Math.floor((1 - t) * -@width), 0
         else
-            ctx.translate (1 - t) * @width, 0
+            ctx.translate Math.floor((1 - t) * @width), 0
 
 class exports.VerticalSlideTransition extends exports.Transition
     duration: 500
 
     prepareA: (ctx, t) ->
-        ctx.translate 0, t * -@height
+        ctx.translate 0, Math.floor(t * -@height)
 
     prepareB: (ctx, t) ->
-        ctx.translate 0, (1 - t) * @height
+        ctx.translate 0, Math.floor((1 - t) * @height)
 
 class exports.RotateTransition extends exports.Transition
     duration: 2000
