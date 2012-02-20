@@ -26,14 +26,24 @@ class exports.Renderer
                 #console.log "x", x, "y", y, [r, g, b]
                 @output.putPixel x, y, r, g, b
 
+class DrawNop
+    duration: 1
+
+    draw: (ctx, t) ->
+
 
 class exports.DrawText
     constructor: (@text) ->
+        # Average; will be recalculated
+        @set_duration Math.ceil(@text.length / 8)
+
+    set_duration: (linecount) ->
+        @duration = Math.ceil(Math.max(0, linecount - 2) * 800)
 
     draw: (ctx, t) ->
-        th = 16
-        padding = 1
-        ctx.font = "#{th}px Sans";
+        th = 9
+        padding = 6
+        ctx.font = "#{th}px Tratexsvart";
         unless @font_lines?
             @font_lines = []
             for line in @text.split(/\n/)
@@ -54,6 +64,8 @@ class exports.DrawText
 
 
 class exports.Transition
+    duration: 1000
+
     constructor: (@a, @b) ->
 
     draw: (ctx, t) ->
@@ -74,6 +86,8 @@ class exports.Transition
     prepareB: (ctx, t) ->
 
 class exports.BlendTransition extends exports.Transition
+    duration: 900
+
     prepareA: (ctx, t) ->
         ctx.globalAlpha = 1 - t
 
@@ -81,6 +95,8 @@ class exports.BlendTransition extends exports.Transition
         ctx.globalAlpha = t
 
 class exports.HorizontalSlideTransition extends exports.Transition
+    duration: 500
+
     constructor: ->
         super
 
@@ -99,6 +115,8 @@ class exports.HorizontalSlideTransition extends exports.Transition
             ctx.translate (1 - t) * @width, 0
 
 class exports.VerticalSlideTransition extends exports.Transition
+    duration: 500
+
     prepareA: (ctx, t) ->
         ctx.translate 0, t * -@height
 
@@ -106,6 +124,8 @@ class exports.VerticalSlideTransition extends exports.Transition
         ctx.translate 0, (1 - t) * @height
 
 class exports.RotateTransition extends exports.Transition
+    duration: 2000
+
     pick_edge: ->
         if @edge?
             return
@@ -144,9 +164,6 @@ class exports.RotateTransition extends exports.Transition
 
 
 class exports.Compositor
-    PHASE: 1000
-    TRANSITION_PHASE: 2000
-
     constructor: (@width, @height) ->
         @current = null
         @queue = []
@@ -177,14 +194,14 @@ class exports.Compositor
 
         unless @current
             @current = @queue.shift()
-            console.log "new current", @current
+            unless @current
+                @current = new DrawNop()
+            #console.log "new current", @current
             @start = getNow()
 
     get_t: ->
-        if @state is 'show'
-            phase = @PHASE
-        else if @state is 'transition'
-            phase = @TRANSITION_PHASE
+        phase = @current?.duration or 1
+
         if @start
             (getNow() - @start) / phase
         else
