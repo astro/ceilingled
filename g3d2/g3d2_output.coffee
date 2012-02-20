@@ -50,9 +50,9 @@ class exports.Output
             now = getNow()
             console.log "frametime", now - lastTick, "ms"
             #process.nextTick @loop
-            setTimeout @loop, Math.max(0, 40 - now + lastTick)
+            setTimeout @loop, Math.max(0, 50 - now + lastTick)
         else
             @sock.once 'drain', =>
                 now = getNow()
                 console.log "draintime", now - lastTick, "ms"
-                setTimeout @loop, Math.max(0, 40 - now + lastTick)
+                setTimeout @loop, Math.max(0, 50 - now + lastTick)
