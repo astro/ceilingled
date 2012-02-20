@@ -188,6 +188,7 @@ class exports.Compositor
             if @state is 'show'
                 @state = 'transition'
                 @current = @make_transition(@current, @queue[0])
+                @phase = @current.duration * (0.2 + 0.8 / Math.max(1, @queue.length / 3))
                 @start = getNow()
             else if @state is 'transition'
                 @state = 'show'
@@ -199,12 +200,11 @@ class exports.Compositor
                 @current = new DrawNop()
             #console.log "new current", @current
             @start = getNow()
+            @phase = @current.duration * (0.5 + 0.7 / Math.max(1, @queue.length / 3))
 
     get_t: ->
-        phase = @current?.duration or 1
-
         if @start
-            (getNow() - @start) / phase
+            (getNow() - @start) / @phase
         else
             0
 
