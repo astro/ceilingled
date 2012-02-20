@@ -29,7 +29,7 @@ class exports.Output
 
     putPixel: (x, y, r, g, b) ->
         #console.log "putPixel", x, y, r, g, b
-        g = Math.ceil(Math.log(g / 255 + 1) * 255)
+        #g = Math.ceil(Math.log(g / 255 + 1) * 255)
         @frame[y][x] = ((g >> 4) & 0xF).toString(16)
 
     flush: =>
