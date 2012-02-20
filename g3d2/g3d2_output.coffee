@@ -34,9 +34,14 @@ class exports.Output
 
     flush: =>
         if @sock
-            console.log @frame.map((line) -> line.join("")).join("\n")
+            #console.log @frame.map((line) -> line.join("")).join("\n")
             frame = @frame.map((line) -> line.join("")).join("")
-            @sock.write "03#{frame}\r\n"
+            if frame isnt @old_frame
+                flushed = @sock.write "03#{frame}\r\n"
+            else
+                flushed = yes
+            @old_frame = frame
+            flushed
 
     loop: =>
         lastTick = getNow()
