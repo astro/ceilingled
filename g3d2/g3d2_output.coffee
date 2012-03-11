@@ -37,22 +37,29 @@ class exports.Output
             #console.log @frame.map((line) -> line.join("")).join("\n")
             frame = @frame.map((line) -> line.join("")).join("")
             if frame isnt @old_frame
-                flushed = @sock.write "03#{frame}\r\n"
+                @old_frame = frame
+                @sock.write "03#{frame}\r\n"
             else
-                flushed = yes
-            @old_frame = frame
-            flushed
+                null
+
+    INTERVAL: 40
 
     loop: =>
         lastTick = getNow()
         @on_drain?()
-        if @flush()
+        flushed = @flush()
+        if flushed == true
             now = getNow()
             console.log "frametime", now - lastTick, "ms"
             #process.nextTick @loop
-            setTimeout @loop, Math.max(0, 50 - now + lastTick)
+            setTimeout @loop, Math.max(0, @INTERVAL - now + lastTick)
+        else if flushed == null
+            # Immediately check for frame modification
+            console.log "no difference"
+            now = getNow()
+            setTimeout @loop, Math.max(0, @INTERVAL / 2 - now + lastTick)
         else
             @sock.once 'drain', =>
                 now = getNow()
                 console.log "draintime", now - lastTick, "ms"
-                setTimeout @loop, Math.max(0, 50 - now + lastTick)
+                setTimeout @loop, Math.max(0, @INTERVAL - now + lastTick)
