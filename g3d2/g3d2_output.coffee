@@ -2,7 +2,7 @@ net = require 'net'
 { getNow } = require './util'
 
 class exports.Output
-    constructor: (host="g3d2.hq.c3d2.de", port=1339) ->
+    constructor: (host="bender.hq.c3d2.de", port=1340) ->
         @frame = []
         @old_frame = []
         for y in [0..(@height - 1)]
@@ -14,7 +14,7 @@ class exports.Output
 
         sock = net.connect port, host, =>
             @sock = sock
-            @sock.write "0403\r\n"
+            @sock.write "0401\r\n"
             process.nextTick @loop
         #sock.on 'data', (data) ->
         #    console.log "<< #{data}"
@@ -23,14 +23,19 @@ class exports.Output
             console.error "G3D2 connection closed"
             process.exit 1
 
-    width: 72
+    width: 24
 
-    height: 32
+    height: 24
 
-    putPixel: (x, y, r, g, b) ->
+    putPixel: (y, x, r, g, b) ->
         #console.log "putPixel", x, y, r, g, b
         #g = Math.ceil(Math.log(g / 255 + 1) * 255)
-        @frame[y][x] = ((g >> 4) & 0xF).toString(16)
+        fmt = (c) ->
+            s = Math.max(0, Math.min(255, c)).toString 16
+            while s.length < 2
+                s = "0#{s}"
+            s
+        @frame[y][x] = "#{fmt r}#{fmt g}#{fmt b}"
 
     flush: =>
         if @sock
@@ -42,7 +47,7 @@ class exports.Output
             else
                 null
 
-    INTERVAL: 40
+    INTERVAL: 30
 
     loop: =>
         lastTick = getNow()
