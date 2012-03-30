@@ -2,6 +2,7 @@
 W = 32
 H = 32
 CAM_Y = 7
+VELOCITY = 4
 track = []
 camZ = 0
 phase = 0
@@ -17,16 +18,16 @@ class Segment
         phase += phase_delta
         if phase >= Math.PI
             phase %= Math.PI
-            dx_amplitude = Math.random() * 8 - 4
+            #dx_amplitude = Math.random() * 8 - 4
             console.log "dx_amplitude", dx_amplitude
-            dy_amplitude = Math.random() * 6 - 2
+            #dy_amplitude = Math.random() * 6 - 2
             console.log "dy_amplitude", dy_amplitude
             phase_delta = Math.PI / (8 + 23 * Math.random())
             console.log "phase_delta", phase_delta
             roofed_phase = Math.random() > 0.6
 
-        @dx = Math.sin(phase) * dx_amplitude
-        @dy = Math.sin(phase) * dy_amplitude
+        @dx = dx_amplitude #Math.sin(phase) * dx_amplitude
+        @dy = dy_amplitude #Math.sin(phase) * dy_amplitude
         @w = Math.sin(phase) * 4 + 4
         @h = Math.sin(phase) * 10 + 3
         @rgb = [
@@ -36,25 +37,25 @@ class Segment
         ]
         @roofed = roofed_phase
 
-    depth: 6
+    depth: 5
 
 tick = ->
     if track[0]
-        velocity = 2
+        velocity = VELOCITY
         if track[0].dy > 0
             #velocity *= 1 + track[0].dy / 10
         else
-            velocity /= 1 - track[0].dy / 5
-        console.log "velocity", velocity
+            #velocity /= 1 - track[0].dy / 5
+        #console.log "velocity", velocity
         camZ += velocity
     while track[0] and track[0].depth < camZ
         camZ -= track[0].depth
         scenery_dx += track[0].dx / 10
         scenery_dy = 2 - track[0].dy / 5
-        console.log "camZ", camZ
+        #console.log "camZ", camZ
         track.splice(0, 1)
 
-    while track.length < 80
+    while track.length < 50
         track.push new Segment()
 
 getTrackTranslation = (z) ->
@@ -68,7 +69,7 @@ drawTrack = (ctx) ->
     ##
 
     z1 = -camZ + track[0].depth + 0.1
-    console.log "camZ", camZ, "dx", track[0].dx, "dy", track[0].dy
+    #console.log "camZ", camZ, "dx", track[0].dx, "dy", track[0].dy
     x = track[0].dx * (1 - camZ / track[0].depth)
     y = track[0].dy * (1 - camZ / track[0].depth) + CAM_Y
 
@@ -264,3 +265,18 @@ updateCeiling = (n, rgb) ->
         else
             Math.ceil(Math.pow(color / 255, 4) * 255)
     renderer.output.putCeiling n, rgb...
+
+renderer.output.on 'slider', (id, value) ->
+    console.log "slider", id, value
+    switch id
+        when 1
+            CAM_Y = 5 + value * 50
+        when 2
+            VELOCITY = value * 8
+            console.log "VELOCITY", VELOCITY
+        when 8
+            dx_amplitude = 8 * value - 4
+            console.log "dx_amplitude", dx_amplitude
+        when 9
+            dy_amplitude = 16 * value - 8
+            console.log "dy_amplitude", dy_amplitude
