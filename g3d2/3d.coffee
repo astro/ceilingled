@@ -1,6 +1,6 @@
 # TODO: clouds, night mode
-W = 24
-H = 24
+W = 32
+H = 32
 CAM_Y = 7
 track = []
 camZ = 0
@@ -242,6 +242,8 @@ drawTrack = (ctx) ->
 { Renderer } = require './render'
 
 renderer = new Renderer
+W = renderer.width
+H = renderer.height
 renderer.on_drain = ->
     ctx = renderer.ctx
 
