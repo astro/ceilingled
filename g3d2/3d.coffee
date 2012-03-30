@@ -81,10 +81,12 @@ drawTrack = (ctx) ->
         y2 = y + seg2.dy
         z2 = z1 + seg2.depth
         yDisplace = 0 #-z / 1000
-        if seg1.roofed
-            updateCeiling i-1, seg1.rgb
-        else
-            updateCeiling i-1, seg1.rgb.map (color) -> color / 3
+        n = 5 - i
+        if n > 0
+            if seg1.roofed
+                updateCeiling i-1, seg1.rgb
+            else
+                updateCeiling i-1, seg1.rgb.map (color) -> color / 3
 
         top = H * ((y - seg1.h) / z1 + 0.5) + yDisplace
         bottom = H * (y / z1 + 0.5) + yDisplace

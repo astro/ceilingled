@@ -74,7 +74,7 @@ class exports.Output extends process.EventEmitter
 
     putCeiling: (n, r, g, b) =>
         fmt = (c) ->
-            s = Math.max(0, Math.min(255, c)).toString 16
+            s = Math.max(0, Math.min(255, Math.floor(c))).toString 16
             while s.length < 2
                 s = "0#{s}"
             s
