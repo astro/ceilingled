@@ -252,3 +252,13 @@ renderer.on_drain = ->
 
     tick()
     drawTrack ctx
+
+updateCeiling = (n, rgb) ->
+    #console.log "updateCeiling", n, r, g, b
+    maxColor = Math.max(rgb...)
+    rgb = rgb.map (color) ->
+        if color is maxColor
+            color
+        else
+            Math.ceil(Math.pow(color / 255, 4) * 255)
+    renderer.output.putCeiling n, rgb...
