@@ -78,15 +78,9 @@ INPUT_MAP =
             norm: (v) -> v / 127
 
 class exports.Output extends process.EventEmitter
-    constructor: (host="bender.hq.c3d2.de", port=1340) ->
+    constructor: (host, port) ->
         @frame = []
-        @old_frame = []
-        for y in [0..(@height - 1)]
-            @frame[y] = []
-            @old_frame[y] = []
-            for x in [0..(@width - 1)]
-                @frame[y][x] = "0"
-                @old_frame[y][x] = "0"
+        @old_frame = ""
         @ceiling = []
 
         @ack_queue = []
@@ -168,15 +162,18 @@ class exports.Output extends process.EventEmitter
 
     height: 24
 
-    putPixel: (y, x, r, g, b) ->
-        #console.log "putPixel", x, y, r, g, b
-        #g = Math.ceil(Math.log(g / 255 + 1) * 255)
-        fmt = (c) ->
-            s = Math.max(0, Math.min(255, c)).toString 16
-            while s.length < 2
-                s = "0#{s}"
-            s
-        @frame[y][x] = "#{fmt r}#{fmt g}#{fmt b}"
+    putPixel: (x, y, r, g, b) ->
+        unless x >= 0 and x < @width and y >= 0 and y < @height
+            return
+        if /^pentawall/.test(@name)
+            fmt = (c) ->
+                s = Math.max(0, Math.min(255, c)).toString 16
+                while s.length < 2
+                    s = "0#{s}"
+                s
+            @frame[y][x] = "#{fmt r}#{fmt g}#{fmt b}"
+        else
+            @frame[y][x] = Math.max(0, Math.min(15, Math.floor(g) >> 4)).toString(16)
 
     putCeiling: (n, r, g, b) =>
         fmt = (c) ->
@@ -188,7 +185,7 @@ class exports.Output extends process.EventEmitter
 
     flush: =>
         if @sock
-            #console.log @frame.map((line) -> line.join("")).join("\n")
+            console.log @frame.map((line) -> line.join("")).join("\n")
             frame = @frame.map((line) -> line.join("")).join("")
             if frame isnt @old_frame
                 @old_frame = frame

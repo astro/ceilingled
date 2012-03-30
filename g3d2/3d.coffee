@@ -245,8 +245,9 @@ drawTrack = (ctx) ->
 { Renderer } = require './render'
 
 renderer = new Renderer
-W = renderer.width
-H = renderer.height
+renderer.output.on 'init', ->
+    W = renderer.output.width
+    H = renderer.output.height
 renderer.on_drain = ->
     ctx = renderer.ctx
 

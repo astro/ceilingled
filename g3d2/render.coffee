@@ -5,15 +5,16 @@ Canvas = require('canvas')
 { getNow, pick_randomly } = require './util'
 
 class exports.Renderer
-    constructor: ->
-        @output = new Output()
-        { @width, @height } = @output
-        canvas = new Canvas @width, @height
-        @ctx = canvas.getContext('2d');
+    constructor: (host="g3d2.hq.c3d2.de", port=1339) ->
+        @output = new Output(host, port)
+        @output.on 'init', =>
+            { width, height } = @output
+            canvas = new Canvas width, height
+            @ctx = canvas.getContext('2d');
 
-        @output.on_drain = =>
-            @on_drain?()
-            @render()
+            @output.on_drain = =>
+                @on_drain?()
+                @render()
 
     render: ->
         data = @ctx.getImageData(0, 0, @output.width, @output.height)?.data
@@ -23,7 +24,6 @@ class exports.Renderer
             for x in [0..@output.width-1]
                 [r, g, b] = [data[offset++], data[offset++], data[offset++]]
                 offset++
-                #console.log "x", x, "y", y, [r, g, b]
                 @output.putPixel x, y, r, g, b
 
 class DrawNop
