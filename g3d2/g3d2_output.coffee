@@ -47,7 +47,7 @@ class exports.Output
             else
                 null
 
-    INTERVAL: 30
+    INTERVAL: 25
 
     loop: =>
         lastTick = getNow()
