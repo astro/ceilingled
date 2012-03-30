@@ -1,7 +1,8 @@
 net = require 'net'
 { getNow } = require './util'
+BufferStream = require('bufferstream')
 
-class exports.Output
+class exports.Output extends process.EventEmitter
     constructor: (host="bender.hq.c3d2.de", port=1340) ->
         @frame = []
         @old_frame = []
@@ -13,16 +14,49 @@ class exports.Output
                 @old_frame[y][x] = "0"
         @ceiling = []
 
+        @ack_queue = []
+
         sock = net.connect port, host, =>
             @sock = sock
-            @sock.write "0401\r\n"
+            # Priority
+            @send_cmd "0401"
+            # Activate input
+            @send_cmd "0901"
             process.nextTick @loop
+        sock.setEncoding 'utf8'
         #sock.on 'data', (data) ->
-        #    console.log "<< #{data}"
+        #    console.log "<<", data
         sock.on 'close', =>
             delete @sock
             console.error "G3D2 connection closed"
             process.exit 1
+
+
+        stream = new BufferStream size:'flexible', encoding: 'utf8'
+        stream.split "\n", (line) =>
+            # FIXME: y is line a Buffer?
+            line = line.toString().replace("\r", "")
+            if /^ok/.test line
+                if (cb = @ack_queue.shift())
+                    cb()
+                else
+                    console.warn "Received spurious 'ok'"
+            else if /^bad/.test line
+                if (cb = @ack_queue.shift())
+                    cb new Error("Bad")
+                else
+                    console.warn "Received spurious 'bad'"
+            else if (m = line.match(/^09/))
+            else
+                console.warn "Unknown message received:", line
+        sock.pipe(stream)
+
+    send_cmd: (line, cb) ->
+        @sock.write "#{line}\r\n"
+        @ack_queue.push (error) ->
+            if error
+                console.error "Error for #{line}\n#{error.stack or error.message or error}"
+            cb? error
 
     width: 24
 
@@ -52,13 +86,12 @@ class exports.Output
             frame = @frame.map((line) -> line.join("")).join("")
             if frame isnt @old_frame
                 @old_frame = frame
-                @sock.write "03#{frame}\r\n"
+                @send_cmd "03#{frame}"
             else
                 null
 
             for i in [0..Math.min(@ceiling.length-1, 3)]
-                console.log "02F#{i+1}#{@ceiling[i]}\r\n"
-                @sock.write "02F#{i+1}#{@ceiling[i]}\r\n"
+                @send_cmd "02F#{i+1}#{@ceiling[i]}"
 
     INTERVAL: 25
 
