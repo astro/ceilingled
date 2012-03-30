@@ -11,6 +11,7 @@ class exports.Output
             for x in [0..(@width - 1)]
                 @frame[y][x] = "0"
                 @old_frame[y][x] = "0"
+        @ceiling = []
 
         sock = net.connect port, host, =>
             @sock = sock
@@ -37,6 +38,14 @@ class exports.Output
             s
         @frame[y][x] = "#{fmt r}#{fmt g}#{fmt b}"
 
+    putCeiling: (n, r, g, b) =>
+        fmt = (c) ->
+            s = Math.max(0, Math.min(255, c)).toString 16
+            while s.length < 2
+                s = "0#{s}"
+            s
+        @ceiling[n] = "#{fmt r}#{fmt g}#{fmt b}00"
+
     flush: =>
         if @sock
             #console.log @frame.map((line) -> line.join("")).join("\n")
@@ -46,6 +55,10 @@ class exports.Output
                 @sock.write "03#{frame}\r\n"
             else
                 null
+
+            for i in [0..Math.min(@ceiling.length-1, 3)]
+                console.log "02F#{i+1}#{@ceiling[i]}\r\n"
+                @sock.write "02F#{i+1}#{@ceiling[i]}\r\n"
 
     INTERVAL: 25
 
