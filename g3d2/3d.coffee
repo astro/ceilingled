@@ -8,43 +8,53 @@ phase = 0
 phase_delta = 1
 dx_amplitude = 0
 dy_amplitude = 0
+roofed_phase = no
 scenery_dx = 0
+scenery_dy = 0
 
 class Segment
     constructor: ->
         phase += phase_delta
         if phase >= Math.PI
             phase %= Math.PI
-            dx_amplitude = Math.random() * 12 - 6
+            dx_amplitude = Math.random() * 8 - 4
             console.log "dx_amplitude", dx_amplitude
-            dy_amplitude = Math.random() * 12 - 4
+            dy_amplitude = Math.random() * 6 - 2
             console.log "dy_amplitude", dy_amplitude
-            phase_delta = Math.PI / (5 + 8 * Math.random())
+            phase_delta = Math.PI / (8 + 23 * Math.random())
             console.log "phase_delta", phase_delta
+            roofed_phase = Math.random() > 0.6
 
         @dx = Math.sin(phase) * dx_amplitude
         @dy = Math.sin(phase) * dy_amplitude
-        @w = Math.sin(phase) * 2 + 10
-        @h = Math.random() * 10 + 2
+        @w = Math.sin(phase) * 4 + 4
+        @h = Math.sin(phase) * 10 + 3
+        @rgb = [
+            127 + Math.ceil(127 * Math.random())
+            127 + Math.ceil(127 * Math.random())
+            127 + Math.ceil(127 * Math.random())
+        ]
+        @roofed = roofed_phase
 
-    depth: 10
+    depth: 6
 
 tick = ->
     if track[0]
-        velocity = 5
+        velocity = 2
         if track[0].dy > 0
-            velocity *= 1 + track[0].dy / 50
+            #velocity *= 1 + track[0].dy / 10
         else
-            velocity /= 1 - track[0].dy / 10
+            velocity /= 1 - track[0].dy / 5
         console.log "velocity", velocity
         camZ += velocity
     while track[0] and track[0].depth < camZ
         camZ -= track[0].depth
         scenery_dx += track[0].dx / 10
+        scenery_dy = 2 - track[0].dy / 5
         console.log "camZ", camZ
         track.splice(0, 1)
 
-    while track.length < 200
+    while track.length < 80
         track.push new Segment()
 
 getTrackTranslation = (z) ->
@@ -71,15 +81,21 @@ drawTrack = (ctx) ->
         y2 = y + seg2.dy
         z2 = z1 + seg2.depth
         yDisplace = 0 #-z / 1000
+        if seg1.roofed
+            updateCeiling i-1, seg1.rgb
+        else
+            updateCeiling i-1, seg1.rgb.map (color) -> color / 3
 
+        top = H * ((y - seg1.h) / z1 + 0.5) + yDisplace
         bottom = H * (y / z1 + 0.5) + yDisplace
         if i is 1
+            #top = Math.min top, 0
             bottom = Math.max bottom, H
         segs.push
             front:
                 x1: W * ((x - seg1.w) / z1 + 0.5)
                 x2: W * ((x + seg1.w) / z1 + 0.5)
-                y1: H * ((y - seg1.h) / z1 + 0.5) + yDisplace
+                y1: top
                 y2: bottom
             back:
                 x1: W * ((x2 - seg2.w) / z2 + 0.5)
@@ -87,6 +103,8 @@ drawTrack = (ctx) ->
                 x2: W * ((x2 + seg2.w) / z2 + 0.5)
                 y2: H * (y2 / z2 + 0.5) + yDisplace
             z: z2
+            roofed: seg1.roofed and seg1.h > CAM_Y + 2 and seg2.h > CAM_Y + 2
+            floorColor: seg1.rgb
 
         x = x2
         y = y2
@@ -115,15 +133,15 @@ drawTrack = (ctx) ->
 
     # FIXME: was too lazy for proper calculashun
     for i in [-3..3]
-        drawMountain scenery_dx + i * 24, bottom, 15
-        drawMountain scenery_dx + i * 24 + 14, bottom, 9
+        drawMountain scenery_dx + i * 24, bottom + scenery_dy, 21
+        drawMountain scenery_dx + i * 24 + 14, bottom + scenery_dy, 15
 
     ##
     # Draw Precalculated Track (in reverse)
     ##
 
     for i in [segs.length-1..0]
-        { front, back, z } = segs[i]
+        { front, back, z, roofed, floorColor } = segs[i]
 
         # fog
         ctx.fillStyle = "rgba(0, 0, 0, #{Math.max(0, z / 2000)})"
@@ -182,23 +200,24 @@ drawTrack = (ctx) ->
         ctx.lineTo front.x2, front.y2
         ctx.lineTo back.x2, back.y2
         ctx.lineTo back.x1, back.y2
-        ctx.fillStyle = '#cd0'
+        ctx.fillStyle = "rgb(#{floorColor.join(',')})"
         ctx.fill()
         # ceiling
-        ###
-        ctx.beginPath()
-        ctx.moveTo back.x1, back.y1
-        ctx.lineTo back.x2, back.y1
-        ctx.strokeStyle = '#111'
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo front.x1, front.y1
-        ctx.lineTo front.x2, front.y1
-        ctx.lineTo back.x2, back.y1
-        ctx.lineTo back.x1, back.y1
-        ctx.fillStyle = '#000'
-        ctx.fill()
-        ###
+        if roofed
+            ###
+            ctx.beginPath()
+            ctx.moveTo back.x1, back.y1
+            ctx.lineTo back.x2, back.y1
+            ctx.strokeStyle = '#111'
+            ctx.stroke()
+            ###
+            ctx.beginPath()
+            ctx.moveTo front.x1, front.y1
+            ctx.lineTo front.x2, front.y1
+            ctx.lineTo back.x2, back.y1
+            ctx.lineTo back.x1, back.y1
+            ctx.fillStyle = "rgba(#{floorColor.join(',')}, 0.95)"
+            ctx.fill()
 
         ctx.beginPath()
         # ul
@@ -207,7 +226,7 @@ drawTrack = (ctx) ->
         # ur
         ctx.moveTo front.x2, front.y1
         ctx.lineTo back.x2, back.y1
-        ctx.strokeStyle = '#fff'
+        ctx.strokeStyle = '#eee'
         ctx.stroke()
 
         ctx.beginPath()
