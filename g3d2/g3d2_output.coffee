@@ -76,6 +76,22 @@ INPUT_MAP =
             type: 'knob'
             id: 9
             norm: (v) -> v / 127
+        23:
+            type: 'button'
+            id: '1a'
+            norm: (v) -> v >= 127
+        24:
+            type: 'button'
+            id: '2a'
+            norm: (v) -> v >= 127
+        30:
+            type: 'button'
+            id: '8a'
+            norm: (v) -> v >= 127
+        31:
+            type: 'button'
+            id: '9a'
+            norm: (v) -> v >= 127
 
 class exports.Output extends process.EventEmitter
     constructor: (host, port) ->
@@ -185,7 +201,12 @@ class exports.Output extends process.EventEmitter
 
     flush: =>
         if @sock
-            console.log @frame.map((line) -> line.join("")).join("\n")
+            if /^pentawallHD/.test(@name)
+                for i in [0..Math.min(@ceiling.length-1, 3)]
+                    if @ceiling[i]
+                        @send_cmd "02F#{i+1}#{@ceiling[i]}"
+
+            #console.log @frame.map((line) -> line.join("")).join("\n")
             frame = @frame.map((line) -> line.join("")).join("")
             if frame isnt @old_frame
                 @old_frame = frame
@@ -193,10 +214,6 @@ class exports.Output extends process.EventEmitter
             else
                 null
 
-            if /^pentawallHD/.test(@name)
-                for i in [0..Math.min(@ceiling.length-1, 3)]
-                    if @ceiling[i]
-                        @send_cmd "02F#{i+1}#{@ceiling[i]}"
 
     INTERVAL: 25
 
@@ -208,6 +225,7 @@ class exports.Output extends process.EventEmitter
         lastTick = getNow()
         @on_drain?()
         flushed = @flush()
+        #console.log "flushed", flushed
         if flushed == true
             now = getNow()
             #console.log "frametime", now - lastTick, "ms"
