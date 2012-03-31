@@ -2,13 +2,13 @@ W = 72
 H = 32
 
 class Projectile
-    constructor: ({@attacker, @energy}) ->
+    constructor: ({@attacker, @energy, yOffset}) ->
+        console.log "Projectile.yOffset", yOffset
         if @attacker.constructor is Player
             @x = @attacker.x + 1
-            @y = @attacker.y
         else
             @x = @attacker.x - 1
-            @y = @attacker.y
+        @y = @attacker.y + yOffset
 
     draw: (ctx, cb) ->
         ctx.save()
@@ -28,12 +28,12 @@ class Projectile
 
         for object in objects.concat(players)
             if object?.damage and
-               @x >= object.x - 1 and
+               @x >= object.x - object.width and
                @x <= object.x + @dx and
-               @y >= object.y - 1 and
-               @y <= object.y + 1
+               @y >= object.y - object.height / 2 and
+               @y <= object.y + object.height / 2
                 # Hit!
-                console.log "Hit #{object} with #{@energy} by #{@}"
+                console.log "Hit #{object.x}x#{object.y}+#{object.width}x#{object.height}+#{@dx} with #{@energy} by #{@x}x#{@y}"
                 object.damage @energy, @attacker
                 rmObject @
                 #objects.push new Explosion(@x, @y, 3)
@@ -47,11 +47,29 @@ class LaserProjectile extends Projectile
             ctx.beginPath()
             ctx.moveTo(0, 0)
             ctx.lineTo(3, 0)
-            ctx.strokeStyle = '#888'
+            ctx.strokeStyle = '#eb4'
             ctx.stroke()
 
 class NukeProjectile extends Projectile
     dx: 1.5
+
+    tick: ->
+        super
+
+        targets = objects.filter (o) ->
+            o.damage?
+        lock = null
+        lock_distance = null
+        for target in targets
+            distance = Math.sqrt(Math.pow(@x - target.x, 2) + Math.pow(@y - target.y, 2))
+            if lock is null or
+               distance < lock_distance
+                lock = target
+                lock_distance = distance
+        if lock and lock.y < @y
+            @y -= 0.5
+        else if lock and lock.y > @y
+            @y += 0.5
 
     draw: (ctx) ->
         super ctx, ->
@@ -59,12 +77,13 @@ class NukeProjectile extends Projectile
             ctx.moveTo(-1, -1)
             ctx.lineTo(2, 0)
             ctx.lineTo(-1, 1)
-            ctx.fillStyle = '#444'
+            ctx.fillStyle = '#a40'
             ctx.fill()
 
 
 class Weapon
-    constructor: ({@player}) ->
+    constructor: ({@player, yOffset}) ->
+        @yOffset = yOffset || 0
         @active = no
         @reloading = 0
 
@@ -77,7 +96,7 @@ class Weapon
             @reloading = @reload_time
 
     trigger: ->
-        objects.push new @projectile({attacker: @player, @energy})
+        objects.push new @projectile({attacker: @player, @energy, @yOffset})
 
 class Laser extends Weapon
     reload_time: 3
@@ -119,10 +138,13 @@ class Explosion
         ctx.restore()
 
 class Enemy
+    width: 4
+    height: 3
+
     constructor: ->
         @x = W + 2
         @y = Math.ceil(Math.random() * H - 2) + 1
-        @health = 10
+        @health = 20
         @brightness = 224
         @makeNewDest()
         @weapons = [
@@ -155,8 +177,8 @@ class Enemy
         # Attack
         canHitPlayer = players.some (player) =>
             player.x <= @x and
-            player.y > @y - 2 and
-            player.y < @y + 2
+            player.y > @y - @height and
+            player.y < @y + @height
         for weapon in @weapons
             weapon.active = canHitPlayer
             weapon.tick()
@@ -187,8 +209,78 @@ class Enemy
 
         ctx.restore()
 
+class Boss extends Enemy
+    width: 4
+    height: 8
+
+    constructor: ->
+        super
+        @health = 200
+        @weapons = [
+            new Laser player: @, yOffset: -3
+            new Laser player: @, yOffset: 3
+            new Nuke player: @
+        ]
+
+    makeNewDest: ->
+        @destX = Math.floor(W * (Math.random() * 0.5 + 0.4))
+        @destY = Math.floor(H * (Math.random() * 0.8 + 0.1))
+
+    tick: ->
+        # Move
+        if @x < @destX - 0.5
+            @x += 1
+        else if @x > @destX + 0.5
+            @x -= 1
+        else
+            @makeNewDest()
+
+        if @y < @destY - 0.5
+            @y += 1
+        else if @y > @destY + 0.5
+            @y -= 1
+        else
+            @makeNewDest()
+
+        # Blink:
+        @brightness = Math.min(@brightness + 32, 255)
+
+        # Attack
+        for weapon in @weapons
+            weapon.active = yes # always
+            weapon.tick()
+
+    draw: (ctx) ->
+        ctx.save()
+        ctx.translate(@x, @y)
+
+        ctx.beginPath()
+        ctx.moveTo(-2, -4)
+        ctx.lineTo(1, -4)
+        ctx.lineTo(2, 0)
+        ctx.lineTo(1, 4)
+        ctx.lineTo(-2, 4)
+        ctx.lineTo(0, 0)
+        ctx.fillStyle = "rgb(0, #{@brightness}, #{@brightness})"
+        ctx.fill()
+
+        ctx.restore()
+
+    damage: (amount, attacker) ->
+        @health -= amount
+        # Blink:
+        @brightness = Math.floor(255, @health / 200)
+
+        if @health < 1
+            rmObject @
+            objects.push new Explosion @x, @y, 20
+            attacker.award? 1000
+        else
+            attacker.award? amount
 
 class Player
+    width: 4
+    height: 3
     constructor: (@name, @x, @y, @color) ->
         @destX = @x
         @destY = @y
@@ -221,10 +313,14 @@ class Player
             weapon.tick()
 
     damage: (energy, attacker) ->
-        @brightness = 16
+        # Blink:
+        @brightness = Math.floor(255, @health / 100)
+        objects.push new Explosion @x, @y, 2
+
         @health -= energy
         if @health < 1
             @award -1000
+            attacker.award? -100
             objects.push new Explosion @x, @y, 10
 
             @health = 100
@@ -241,9 +337,9 @@ class Player
 
         ctx.beginPath()
         ctx.moveTo(1, 0)
-        ctx.lineTo(-2, 2)
-        ctx.lineTo(-1, 0)
-        ctx.lineTo(-2, -2)
+        ctx.lineTo(-3, 2)
+        ctx.lineTo(-2, 0)
+        ctx.lineTo(-3, -2)
         ctx.fillStyle = "rgb(#{@brightness}, #{@brightness}, #{@brightness})"
         ctx.fill()
 
@@ -253,19 +349,19 @@ class Player
         ctx.save()
         ctx.translate(@x, @y)
 
-        ctx.font = "8px TratexSvart"
+        ctx.font = "8px Inconsolata"
         ctx.fillStyle = @color
         putText = (s, x, y) ->
             m = ctx.measureText(s)
             ctx.fillText(s, x - m.width, y)
 
-        putText "#{@name}", -1, 0
-        putText "#{@score}", -1, 8
+        putText "#{@name}", -2, 0
+        putText "#{@score}", -2, 7
 
         # Health bar
         ctx.beginPath()
-        ctx.moveTo -1, 0
-        ctx.lineTo -1 - (8 * @health / 100), 0
+        ctx.moveTo -2, 0.5
+        ctx.lineTo -2 - (8 * @health / 100), 0.5
         ctx.strokeStyle = @color
         ctx.stroke()
 
@@ -291,6 +387,11 @@ players = [
     new Player("P2", 10, 24, '#00f')
 ]
 
+maxEnemies = 3
+setInterval ->
+    maxEnemies++
+, 15000
+
 objects = []
 rmObject = (o) ->
     if (i = objects.indexOf(o)) >= 0
@@ -310,11 +411,14 @@ tick = ->
         player.tick()
     enemies = 0
     for object in objects
-        if object?.constructor is Enemy
+        if object?.constructor is Enemy or object?.constructor is Boss
             enemies++
         object?.tick()
-    if enemies < 2
-        objects.push new Enemy
+    if enemies < maxEnemies
+        if Math.random() < 0.1
+            objects.push new Boss
+        else
+            objects.push new Enemy
     console.log("objects", objects.length)
 
 drawScene = (ctx) ->
@@ -354,27 +458,38 @@ pentawallHD = new Renderer 'bender.hq.c3d2.de', 1340
 
 pentawallHD.on_drain = ->
     ctx = pentawallHD.ctx
-    ctx.save()
-    ctx.translate pentawallHD.output.width / 2 - players[0].x, pentawallHD.output.height / 2 - players[0].y
-    drawScene ctx
 
-    # Draw scores
+    i = 0
     for player in players
+        ctx.save()
+
+        ctx.rect(0, i * pentawallHD.output.height / 2,
+            pentawallHD.output.width, pentawallHD.output.height / 2)
+        ctx.clip()
+
+        ctx.translate pentawallHD.output.width - 5 - player.x,
+            pentawallHD.output.height * (1 + i * 2) / 4 - player.y
+
+        drawScene ctx
         player.drawHUD(ctx)
 
-    ctx.restore()
+        ctx.restore()
+        i++
 
 pentawallHD.output.on 'slider', (id, value) ->
     console.log "slider", id, value
     switch id
         when 1
-            players[0].destX = value * (W - 2) + 1
-        when 2
             players[0].destY = (1 - value) * (H - 2) + 1
-        when 8
-            players[1].destX = value * (W - 2) + 1
         when 9
             players[1].destY = (1 - value) * (H - 2) + 1
+pentawallHD.output.on 'knob', (id, value) ->
+    console.log "knob", id, value
+    switch id
+        when 1
+            players[0].destX = value * (W - 2) + 1
+        when 9
+            players[1].destX = value * (W - 2) + 1
 pentawallHD.output.on 'button', (id, value) ->
     console.log "button", id, value
     switch id
