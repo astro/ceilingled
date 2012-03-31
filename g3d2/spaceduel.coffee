@@ -4,7 +4,7 @@ H = 32
 class Projectile
     constructor: ({@attacker, @energy}) ->
         if @attacker.constructor is Player
-            @x = @.x + 1
+            @x = @attacker.x + 1
             @y = @attacker.y
         else
             @x = @attacker.x - 1
@@ -376,6 +376,7 @@ pentawallHD.output.on 'slider', (id, value) ->
         when 9
             players[1].destY = (1 - value) * (H - 2) + 1
 pentawallHD.output.on 'button', (id, value) ->
+    console.log "button", id, value
     switch id
         when '1a'
             players[0].weapons[0].active = value
