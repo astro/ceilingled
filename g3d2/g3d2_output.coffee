@@ -219,7 +219,7 @@ class exports.Output extends process.EventEmitter
 
     loop: =>
         #console.log "queue", @ack_queue.length
-        if @ack_queue.length >= 8
+        if @ack_queue.length >= 4
             return @once 'ack', @loop
 
         lastTick = getNow()
