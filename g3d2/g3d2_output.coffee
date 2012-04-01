@@ -3,95 +3,25 @@ net = require 'net'
 BufferStream = require('bufferstream')
 
 INPUT_MAP =
-    176:
-        2:
-            type: 'slider'
-            id: 1
-            norm: (v) -> v / 127
-        3:
-            type: 'slider'
-            id: 2
-            norm: (v) -> v / 127
-        4:
-            type: 'slider'
-            id: 3
-            norm: (v) -> v / 127
-        5:
-            type: 'slider'
-            id: 4
-            norm: (v) -> v / 127
-        6:
-            type: 'slider'
-            id: 5
-            norm: (v) -> v / 127
-        8:
-            type: 'slider'
-            id: 6
-            norm: (v) -> v / 127
-        9:
-            type: 'slider'
-            id: 7
-            norm: (v) -> v / 127
-        12:
-            type: 'slider'
-            id: 8
-            norm: (v) -> v / 127
-        13:
-            type: 'slider'
-            id: 9
-            norm: (v) -> v / 127
-        14:
-            type: 'knob'
-            id: 1
-            norm: (v) -> v / 127
-        15:
-            type: 'knob'
-            id: 2
-            norm: (v) -> v / 127
-        16:
-            type: 'knob'
-            id: 3
-            norm: (v) -> v / 127
-        17:
-            type: 'knob'
-            id: 4
-            norm: (v) -> v / 127
-        18:
-            type: 'knob'
-            id: 5
-            norm: (v) -> v / 127
-        19:
-            type: 'knob'
-            id: 6
-            norm: (v) -> v / 127
-        20:
-            type: 'knob'
-            id: 7
-            norm: (v) -> v / 127
-        21:
-            type: 'knob'
-            id: 8
-            norm: (v) -> v / 127
-        22:
-            type: 'knob'
-            id: 9
-            norm: (v) -> v / 127
-        23:
-            type: 'button'
-            id: '1a'
-            norm: (v) -> v >= 127
-        24:
-            type: 'button'
-            id: '2a'
-            norm: (v) -> v >= 127
-        30:
-            type: 'button'
-            id: '8a'
-            norm: (v) -> v >= 127
-        31:
-            type: 'button'
-            id: '9a'
-            norm: (v) -> v >= 127
+    176: {}
+
+for i in [1..9]
+    INPUT_MAP[176][i] =
+        type: 'slider'
+        id: i
+        norm: (v) -> v / 127
+    INPUT_MAP[176][i + 10] =
+        type: 'knob'
+        id: i
+        norm: (v) -> v / 127
+    INPUT_MAP[176][i + 20] =
+        type: 'button'
+        id: "#{i}a"
+        norm: (v) -> v >= 127
+    INPUT_MAP[176][i + 30] =
+        type: 'button'
+        id: "#{i}b"
+        norm: (v) -> v >= 127
 
 class exports.Output extends process.EventEmitter
     constructor: (host, port) ->
