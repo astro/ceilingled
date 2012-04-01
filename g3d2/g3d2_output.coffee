@@ -179,8 +179,16 @@ class exports.Output extends process.EventEmitter
     height: 24
 
     putPixel: (x, y, r, g, b) ->
+        # Workaround:
+        if @name is 'pentawallHD'
+            tmp = y
+            y = x
+            x = tmp
+
+        # Clip
         unless x >= 0 and x < @width and y >= 0 and y < @height
             return
+        # 24bit RGB or 4bit G?
         if /^pentawall/.test(@name)
             fmt = (c) ->
                 s = Math.max(0, Math.min(255, c)).toString 16

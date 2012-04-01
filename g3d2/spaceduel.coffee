@@ -28,15 +28,16 @@ class Projectile
 
         for object in objects.concat(players)
             if object?.damage and
-               @x >= object.x - object.width and
-               @x <= object.x + @dx and
+               object isnt @attacker and
+               @x >= object.x - object.width / 2 and
+               @x <= object.x + object.width / 2 + @dx and
                @y >= object.y - object.height / 2 and
                @y <= object.y + object.height / 2
                 # Hit!
                 console.log "Hit #{object.x}x#{object.y}+#{object.width}x#{object.height}+#{@dx} with #{@energy} by #{@x}x#{@y}"
                 object.damage @energy, @attacker
                 rmObject @
-                #objects.push new Explosion(@x, @y, 3)
+                objects.push new Explosion(@x, @y, 3)
                 break
 
 class LaserProjectile extends Projectile
@@ -77,7 +78,7 @@ class NukeProjectile extends Projectile
             ctx.moveTo(-1, -1)
             ctx.lineTo(2, 0)
             ctx.lineTo(-1, 1)
-            ctx.fillStyle = '#a40'
+            ctx.fillStyle = '#a80'
             ctx.fill()
 
 
@@ -190,7 +191,6 @@ class Enemy
 
         if @health < 1
             rmObject @
-            objects.push new Explosion @x, @y
             attacker.award? 100
         else
             attacker.award? amount
@@ -284,6 +284,7 @@ class Player
     constructor: (@name, @x, @y, @color) ->
         @destX = @x
         @destY = @y
+        @x = -5
         @health = 100
         @score = 0
         @brightness = 255
@@ -324,7 +325,7 @@ class Player
             objects.push new Explosion @x, @y, 10
 
             @health = 100
-            @x = 3
+            @x = -10
 
         attacker.award? -10
 
@@ -361,7 +362,7 @@ class Player
         # Health bar
         ctx.beginPath()
         ctx.moveTo -2, 0.5
-        ctx.lineTo -2 - (8 * @health / 100), 0.5
+        ctx.lineTo -2 - (16 * @health / 100), 0.5
         ctx.strokeStyle = @color
         ctx.stroke()
 
@@ -383,11 +384,13 @@ class Star
         ctx.fillRect @x, @y, 1, 1
 
 players = [
-    new Player("P1", 10, 8, '#f00')
-    new Player("P2", 10, 24, '#00f')
+    new Player("P1", 8, 5, '#f00')
+    new Player("P2", 24, 12, '#00f')
+    new Player("P3", 24, 20, '#0f0')
+    new Player("P4", 8, 27, '#ff0')
 ]
 
-maxEnemies = 3
+maxEnemies = 1
 setInterval ->
     maxEnemies++
 , 15000
@@ -442,6 +445,7 @@ g3d2.output.on 'init', ->
 g3d2.on_drain = ->
     tick()
     ctx = g3d2.ctx
+    ctx.antialias = 'grey'
     drawScene ctx
 
 updateCeiling = (n, rgb) ->
@@ -458,6 +462,7 @@ pentawallHD = new Renderer 'bender.hq.c3d2.de', 1340
 
 pentawallHD.on_drain = ->
     ctx = pentawallHD.ctx
+    ctx.antialias = 'grey'
 
     i = 0
     for player in players
@@ -467,8 +472,8 @@ pentawallHD.on_drain = ->
             pentawallHD.output.width, pentawallHD.output.height / 2)
         ctx.clip()
 
-        ctx.translate pentawallHD.output.width - 5 - player.x,
-            pentawallHD.output.height * (1 + i * 2) / 4 - player.y
+        ctx.translate pentawallHD.output.width - 6 - player.x,
+            pentawallHD.output.height * (1 + i * 2) / 4 - player.y - 1
 
         drawScene ctx
         player.drawHUD(ctx)
@@ -481,23 +486,39 @@ pentawallHD.output.on 'slider', (id, value) ->
     switch id
         when 1
             players[0].destY = (1 - value) * (H - 2) + 1
-        when 9
+        when 3
             players[1].destY = (1 - value) * (H - 2) + 1
+        when 7
+            players[2].destY = (1 - value) * (H - 2) + 1
+        when 9
+            players[3].destY = (1 - value) * (H - 2) + 1
 pentawallHD.output.on 'knob', (id, value) ->
     console.log "knob", id, value
     switch id
         when 1
             players[0].destX = value * (W - 2) + 1
-        when 9
+        when 3
             players[1].destX = value * (W - 2) + 1
+        when 7
+            players[2].destX = value * (W - 2) + 1
+        when 9
+            players[3].destX = value * (W - 2) + 1
 pentawallHD.output.on 'button', (id, value) ->
     console.log "button", id, value
     switch id
         when '1a'
             players[0].weapons[0].active = value
-        when '2a'
+        when '1b'
             players[0].weapons[1].active = value
-        when '8a'
+        when '3a'
             players[1].weapons[0].active = value
-        when '9a'
+        when '3b'
             players[1].weapons[1].active = value
+        when '7a'
+            players[2].weapons[0].active = value
+        when '7b'
+            players[2].weapons[1].active = value
+        when '9a'
+            players[3].weapons[0].active = value
+        when '9b'
+            players[3].weapons[1].active = value
