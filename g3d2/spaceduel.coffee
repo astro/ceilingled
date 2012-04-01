@@ -212,8 +212,8 @@ class Enemy
         ctx.restore()
 
 class Boss extends Enemy
-    width: 4
-    height: 8
+    width: 3
+    height: 6
 
     constructor: ->
         super
@@ -225,22 +225,22 @@ class Boss extends Enemy
         ]
 
     makeNewDest: ->
-        @destX = Math.floor(W * (Math.random() * 0.5 + 0.4))
+        @destX = Math.floor(W * (Math.random() * 0.7 + 0.2))
         @destY = Math.floor(H * (Math.random() * 0.8 + 0.1))
 
     tick: ->
         # Move
         if @x < @destX - 0.5
-            @x += 1
+            @x += 0.5
         else if @x > @destX + 0.5
-            @x -= 1
+            @x -= 0.5
         else
             @makeNewDest()
 
         if @y < @destY - 0.5
-            @y += 1
+            @y += 0.5
         else if @y > @destY + 0.5
-            @y -= 1
+            @y -= 0.5
         else
             @makeNewDest()
 
@@ -257,12 +257,12 @@ class Boss extends Enemy
         ctx.translate(@x, @y)
 
         ctx.beginPath()
-        ctx.moveTo(-2, -4)
-        ctx.lineTo(1, -4)
+        ctx.moveTo(-1, -3)
+        ctx.lineTo(1, -3)
         ctx.lineTo(2, 0)
-        ctx.lineTo(1, 4)
-        ctx.lineTo(-2, 4)
-        ctx.lineTo(0, 0)
+        ctx.lineTo(1, 3)
+        ctx.lineTo(-1, 3)
+        ctx.lineTo(0.5, 0)
         ctx.fillStyle = "rgb(0, #{@brightness}, #{@brightness})"
         ctx.fill()
 
