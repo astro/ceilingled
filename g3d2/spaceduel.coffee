@@ -1,3 +1,5 @@
+Font = require './pixelfont'
+
 W = 72
 H = 32
 
@@ -350,14 +352,12 @@ class Player
         ctx.save()
         ctx.translate(@x, @y)
 
-        ctx.font = "8px Inconsolata"
         ctx.fillStyle = @color
         putText = (s, x, y) ->
-            m = ctx.measureText(s)
-            ctx.fillText(s, x - m.width, y)
+            Font.putText ctx, x - Font.textWidth(s), y, s
 
-        putText "#{@name}", -2, 0
-        putText "#{@score}", -2, 7
+        putText "#{@name}", -2, -6
+        putText "#{@score}", -2, 1
 
         # Health bar
         ctx.beginPath()
