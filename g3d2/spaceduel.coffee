@@ -193,7 +193,7 @@ class Enemy
 
         if @health < 1
             rmObject @
-            attacker.award? 100
+            attacker.award? 10
         else
             attacker.award? amount
 
@@ -276,7 +276,7 @@ class Boss extends Enemy
         if @health < 1
             rmObject @
             objects.push new Explosion @x, @y, 20
-            attacker.award? 1000
+            attacker.award? 30
         else
             attacker.award? amount
 
@@ -322,8 +322,8 @@ class Player
 
         @health -= energy
         if @health < 1
-            @award -1000
-            attacker.award? -100
+            @award -100
+            attacker.award? -10
             objects.push new Explosion @x, @y, 10
 
             @health = 100
