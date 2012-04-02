@@ -39,7 +39,7 @@ class Projectile
                 console.log "Hit #{object.x}x#{object.y}+#{object.width}x#{object.height}+#{@dx} with #{@energy} by #{@x}x#{@y}"
                 object.damage @energy, @attacker
                 rmObject @
-                objects.push new Explosion(@x, @y, 3)
+                #objects.push new Explosion(@x, @y, @attacker, 5)
                 break
 
 class LaserProjectile extends Projectile
@@ -50,7 +50,7 @@ class LaserProjectile extends Projectile
             ctx.beginPath()
             ctx.moveTo(0, 0)
             ctx.lineTo(3, 0)
-            ctx.strokeStyle = '#eb4'
+            ctx.strokeStyle = '#99f'
             ctx.stroke()
 
 class NukeProjectile extends Projectile
@@ -60,7 +60,7 @@ class NukeProjectile extends Projectile
         super
 
         targets = objects.filter (o) ->
-            o.damage?
+            o.damage? and o?.constructor isnt Projectile
         lock = null
         lock_distance = null
         for target in targets
@@ -80,14 +80,17 @@ class NukeProjectile extends Projectile
             ctx.moveTo(-1, -1)
             ctx.lineTo(2, 0)
             ctx.lineTo(-1, 1)
-            ctx.fillStyle = '#a80'
+            ctx.fillStyle = '#fa0'
             ctx.fill()
 
+    damage: (amount, attacker) ->
+        rmObject @
+        objects.push new Explosion @x, @y, attacker, 4
 
 class Weapon
     constructor: ({@player, yOffset}) ->
         @yOffset = yOffset || 0
-        @active = no
+        @active = yes #no
         @reloading = 0
 
     tick: ->
@@ -102,27 +105,33 @@ class Weapon
         objects.push new @projectile({attacker: @player, @energy, @yOffset})
 
 class Laser extends Weapon
-    reload_time: 3
+    reload_time: 4
     energy: 2
     projectile: LaserProjectile
 
 class Nuke extends Weapon
-    reload_time: 30
+    reload_time: 50
     energy: 10
     projectile: NukeProjectile
 
 
 class Explosion
-    constructor: (@x, @y, @steps=6) ->
+    constructor: (@x, @y, @attacker, @steps=6) ->
         @radius = 2
         @brightness = 1
 
     tick: ->
         @radius++
-        # TODO: damage
         @brightness -= 1 / @steps
         if @brightness <= 0
             rmObject @
+        else
+            # Damage
+            for o in objects
+                if o?.damage
+                    distance = Math.sqrt(Math.pow(o.x - @x, 2) + Math.pow(o.y - @y, 2))
+                    if distance <= @radius
+                        o.damage 10 * @brightness, @attacker
 
     draw: (ctx) ->
         ctx.save()
@@ -223,6 +232,7 @@ class Enemy
 
         if @health < 1
             rmObject @
+            objects.push new Explosion @x, @y, attacker, 10
             attacker.award? 10
         else
             attacker.award? amount
@@ -244,15 +254,16 @@ class Enemy
 class Boss extends Enemy
     width: 3
     height: 6
+    health: 200
 
     constructor: ->
         super
-        @health = 200
         @weapons = [
             new Laser player: @, yOffset: -3
             new Laser player: @, yOffset: 3
             new Nuke player: @
         ]
+        @move_i = 0
 
     makeNewDest: ->
         @destX = Math.floor(W * (Math.random() * 0.7 + 0.2))
@@ -260,19 +271,21 @@ class Boss extends Enemy
 
     tick: ->
         # Move
-        if @x < @destX - 0.5
-            @x += 0.5
-        else if @x > @destX + 0.5
-            @x -= 0.5
-        else
-            @makeNewDest()
+        @move_i = (@move_i + 2) % 3
+        if @move_i is 0
+            if @x < @destX - 0.5
+                @x += 1
+            else if @x > @destX + 0.5
+                @x -= 1
+            else
+                @makeNewDest()
 
-        if @y < @destY - 0.5
-            @y += 0.5
-        else if @y > @destY + 0.5
-            @y -= 0.5
-        else
-            @makeNewDest()
+            if @y < @destY - 0.5
+                @y += 1
+            else if @y > @destY + 0.5
+                @y -= 1
+            else
+                @makeNewDest()
 
         # Blink:
         @brightness = Math.min(@brightness + 32, 255)
@@ -305,7 +318,7 @@ class Boss extends Enemy
 
         if @health < 1
             rmObject @
-            objects.push new Explosion @x, @y, 20
+            objects.push new Explosion @x, @y, attacker, 20
             attacker.award? 30
         else
             attacker.award? amount
@@ -319,6 +332,7 @@ class Player
         @x = -5
         @health = 100
         @score = 0
+        @displayScore = 0
         @brightness = 255
 
         @weapons = [
@@ -348,13 +362,13 @@ class Player
     damage: (energy, attacker) ->
         # Blink:
         @brightness = Math.floor(255, @health / 100)
-        objects.push new Explosion @x, @y, 2
+        objects.push new Explosion @x, @y, attacker, 3
 
         @health -= energy
         if @health < 1
             @award -100
             attacker.award? -10
-            objects.push new Explosion @x, @y, 10
+            objects.push new Explosion @x, @y, attacker, 10
 
             @health = 100
             @x = -10
@@ -379,6 +393,14 @@ class Player
         ctx.restore()
 
     drawHUD: (ctx) ->
+        ###
+        if @displayScore < Math.floor(@score)
+            @displayScore++
+        else if @displayScore > Math.floor(@score)
+            @displayScore--
+        ###
+        @displayScore = Math.floor @score
+
         ctx.save()
         ctx.translate(@x, @y)
 
@@ -387,7 +409,7 @@ class Player
             Font.putText ctx, x - Font.textWidth(s), y, s
 
         putText "#{@name}", -2, -6
-        putText "#{@score}", -2, 1
+        putText "#{Math.floor @displayScore}", -2, 1
 
         # Health bar
         ctx.beginPath()
@@ -416,14 +438,14 @@ class Star
 players = [
     new Player("P1", 8, 5, '#f00')
     new Player("P2", 24, 12, '#00f')
-    new Player("P3", 24, 20, '#0f0')
-    new Player("P4", 8, 27, '#ff0')
+    #new Player("P3", 24, 20, '#0f0')
+    #new Player("P4", 8, 27, '#ff0')
 ]
 
 maxEnemies = 1
 setInterval ->
-    maxEnemies++
-, 15000
+    maxEnemies++ if maxEnemies < 8
+, 30000
 
 objects = []
 rmObject = (o) ->
@@ -454,6 +476,9 @@ tick = ->
             objects.push new Enemy
     console.log("objects", objects.length)
 
+setInterval tick, 50
+
+
 drawScene = (ctx) ->
     ctx.fillStyle = "#000"
     ctx.fillRect -g3d2.output.width, -g3d2.output.height, g3d2.output.width*2, g3d2.output.height*2
@@ -473,7 +498,6 @@ drawScene = (ctx) ->
 g3d2 = new Renderer 'g3d2.hq.c3d2.de', 1339
 g3d2.output.on 'init', ->
 g3d2.on_drain = ->
-    tick()
     ctx = g3d2.ctx
     ctx.antialias = 'grey'
     drawScene ctx
