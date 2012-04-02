@@ -129,13 +129,13 @@ class exports.Output extends process.EventEmitter
         else
             @frame[y][x] = Math.max(0, Math.min(15, Math.floor(g) >> 4)).toString(16)
 
-    putCeiling: (n, r, g, b) =>
+    putCeiling: (n, r=0, g=0, b=0, w=0) =>
         fmt = (c) ->
             s = Math.max(0, Math.min(255, Math.floor(c))).toString 16
             while s.length < 2
                 s = "0#{s}"
             s
-        @ceiling[n] = "#{fmt r}#{fmt g}#{fmt b}00"
+        @ceiling[n] = "#{fmt r}#{fmt g}#{fmt b}#{fmt w}"
 
     flush: =>
         if @sock

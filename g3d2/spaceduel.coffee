@@ -130,9 +130,8 @@ class Explosion
 
         ctx.beginPath()
         ctx.arc 0, 0, @radius, 0, 2 * Math.PI
-        r = Math.ceil(Math.sin(@brightness * Math.PI / 2) * 255)
-        g = Math.ceil(@brightness * 255)
-        ctx.fillStyle = "rgb(#{r}, #{g}, 0)"
+        [r, g, b] = explosion_color @brightness
+        ctx.fillStyle = "rgb(#{r}, #{g}, #{b})"
         globalAlpha = ctx.globalAlpha
         ctx.globalAlpha = Math.sin(@brightness * Math.PI / 2)
         ctx.fill()
@@ -140,14 +139,45 @@ class Explosion
         ctx.globalAlpha = globalAlpha
         ctx.restore()
 
+explosion_step = (n) ->
+    switch n
+        when 0
+            [255, 0, 0, 255]
+        when 1
+            [255, 255, 0, 0]
+        when 2
+            [255, 233, 0, 0]
+        else
+            r = 255 * (1 - (n - 2) / 5)
+            g = Math.max 0, 233 * (1 - (n - 2) / 3)
+            [r, g, 0, 0]
+
+explosion_color = (brightness) ->
+    brightness = 1 - brightness
+    brightness1 = Math.floor(brightness * 7)
+    brightness2 = Math.ceil(brightness * 7)
+    [r1, g1, b1, w1] = explosion_step brightness1
+    if brightness1 is brightness2
+        return [r1, g1, b1, w1]
+
+    [r2, g2, b2, w2] = explosion_step brightness2
+    d = 7 * brightness - brightness1
+    a = (a1, a2) -> Math.ceil(a1 * d + a2 * (1 - d))
+    [
+        a r1, r2
+        a g1, g2
+        a b1, b2
+        a w1, w2
+    ]
+
 class Enemy
     width: 4
     height: 3
+    health: 20
 
     constructor: ->
         @x = W + 2
         @y = Math.ceil(Math.random() * H - 2) + 1
-        @health = 20
         @brightness = 224
         @makeNewDest()
         @weapons = [
@@ -448,16 +478,6 @@ g3d2.on_drain = ->
     ctx.antialias = 'grey'
     drawScene ctx
 
-updateCeiling = (n, rgb) ->
-    #console.log "updateCeiling", n, r, g, b
-    maxColor = Math.max(rgb...)
-    rgb = rgb.map (color) ->
-        if color is maxColor
-            color
-        else
-            Math.ceil(Math.pow(color / 255, 4) * 255)
-    renderer.output.putCeiling n, rgb...
-
 pentawallHD = new Renderer 'bender.hq.c3d2.de', 1340
 
 pentawallHD.on_drain = ->
@@ -480,6 +500,21 @@ pentawallHD.on_drain = ->
 
         ctx.restore()
         i++
+
+
+    ceilingBrightness = [0, 0, 0, 0]
+    for object in objects
+        if object.constructor is Explosion and
+           (i = players.indexOf(object.attacker)) >= 0
+            if ceilingBrightness[i] < object.brightness
+                ceilingBrightness[i] = object.brightness
+    for i in [0..3]
+        brightness = ceilingBrightness[i]
+        #r = Math.ceil(Math.sin(brightness * Math.PI / 2) * 255)
+        #g = Math.ceil(brightness * 255)
+        if brightness isnt 0
+            console.log "explosion_color", brightness, explosion_color(brightness)
+        pentawallHD.output.putCeiling i, explosion_color(brightness)...
 
 pentawallHD.output.on 'slider', (id, value) ->
     console.log "slider", id, value

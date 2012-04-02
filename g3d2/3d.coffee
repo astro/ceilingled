@@ -265,7 +265,7 @@ updateCeiling = (n, rgb) ->
             color
         else
             Math.ceil(Math.pow(color / 255, 4) * 255)
-    renderer.output.putCeiling n, rgb...
+    renderer.output.putCeiling n, rgb..., 255
 
 renderer.output.on 'slider', (id, value) ->
     console.log "slider", id, value
