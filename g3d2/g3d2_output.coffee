@@ -38,7 +38,7 @@ class exports.Output extends process.EventEmitter
         sock = net.connect port, host, =>
             @sock = sock
             # Priority
-            @send_cmd "0401"
+            @send_cmd "0403"
             # Activate input
             @send_cmd "0901"
             @send_cmd "00", (error, msg) =>
