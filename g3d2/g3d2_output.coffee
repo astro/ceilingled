@@ -88,6 +88,8 @@ class exports.Output extends process.EventEmitter
                     @emit input.type, input.id, value
                 else
                     console.log "Unknown input", event, id, value
+            else if /^\d/.test line
+                console.log "Unrecognized message", line
             else if (m = line.match(/^([a-z].+?)=(.+)/))
                 key = m[1]
                 value = m[2]
