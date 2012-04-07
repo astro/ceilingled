@@ -22,6 +22,10 @@ for i in [1..9]
         type: 'button'
         id: "#{i}b"
         norm: (v) -> v >= 127
+INPUT_MAP[176][41] =
+    type: 'button'
+    id: 'play'
+    norm: (v) -> v >= 127
 
 class exports.Output extends process.EventEmitter
     constructor: (host, port) ->
