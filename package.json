@@ -1,0 +1,11 @@
+{ "name": "ceilingled"
+, "version": "0.0.0"
+, "dependencies": { "bufferstream": ">=0.5.1"
+  		  , "coffee-script": ">= 1.2.0"
+		  , "superfeedr": ">= 0.0.4"
+		  , "ntwitter": ">= 0.2.10"
+		  , "canvas": ">= 0.10.2"
+		  , "animation": ">= 0.0.2"
+		  , "sdl": ">= 0.1.4"
+                  }
+}
