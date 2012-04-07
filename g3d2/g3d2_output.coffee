@@ -118,7 +118,7 @@ class exports.Output extends process.EventEmitter
 
     putPixel: (x, y, r, g, b) ->
         # Workaround:
-        if @name is 'pentawallHD'
+        if @name is 'PentawallHD'
             tmp = y
             y = x
             x = tmp
@@ -127,7 +127,7 @@ class exports.Output extends process.EventEmitter
         unless x >= 0 and x < @width and y >= 0 and y < @height
             return
         # 24bit RGB or 4bit G?
-        if /^pentawall/.test(@name)
+        if /^pentawall/i.test(@name)
             fmt = (c) ->
                 s = Math.max(0, Math.min(255, c)).toString 16
                 while s.length < 2
