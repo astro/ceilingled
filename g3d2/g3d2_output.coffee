@@ -41,8 +41,8 @@ class exports.Output extends process.EventEmitter
             @send_cmd "0403"
             # Activate input
             @send_cmd "0901"
-            @send_cmd "00", (error, msg) =>
-                console.log "00", error, msg
+            @send_cmd "01", (error, msg) =>
+                console.log "01", error, msg
                 if msg
                     @width = parseInt msg.width, 10
                     @height = parseInt msg.height, 10
