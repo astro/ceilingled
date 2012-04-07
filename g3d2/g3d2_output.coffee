@@ -47,10 +47,12 @@ class exports.Output extends process.EventEmitter
                     @width = parseInt msg.width, 10
                     @height = parseInt msg.height, 10
                     @name = msg.name
+
+                defaultPixel = if /^g3d2/.test @name then "0" else "000000"
                 for y in [0..(@height - 1)]
                     @frame[y] = []
                     for x in [0..(@width - 1)]
-                        @frame[y][x] = ""
+                        @frame[y][x] = defaultPixel
                 @emit 'init'
                 process.nextTick @loop
         sock.setEncoding 'utf8'
