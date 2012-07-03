@@ -1,18 +1,19 @@
 Canvas = require('canvas')
 
-#{ Output } = require './sdl_output'
-{ Output } = require './g3d2_output'
+SDL = require './sdl_output'
+G3D2 = require './g3d2_output'
+Tee = require './tee_output'
 { getNow, pick_randomly } = require './util'
 
 class exports.Renderer
-    constructor: (host="g3d2.hq.c3d2.de", port=1339) ->
-        @output = new Output(host, port)
+    constructor: (host="bender", port=1339) ->
+        @output = new Tee.Output([new G3D2.Output(host, port), new SDL.Output()])
         @output.on 'init', =>
             { width, height } = @output
             canvas = new Canvas width, height
             @ctx = canvas.getContext('2d');
 
-            @output.on_drain = =>
+            @output.on 'drain', =>
                 @on_drain?()
                 @render()
 
@@ -32,6 +33,50 @@ class DrawNop
     draw: (ctx, t) ->
 
 
+class DrawRoad
+    duration: 10
+
+    constructor: ->
+        @track = []
+
+    draw: (ctx, t) ->
+        hw = Math.floor(@width / 2)
+        hh = Math.floor(@height / 2)
+        ctx.translate hw, hh
+
+        x = 0
+        y = 0
+        z = t * 10
+        for i_ in [10..1]
+            z1 = z + i_
+            track = @get_track(Math.floor(i))
+            x += track.x
+            y += track.y
+            #if i - z - i < 1
+            #track.x
+
+            d = []
+            for mz in [z1, z1 + 1]
+                for mx in [-hw / 2, hw / 2]
+                    sx = mx + x
+                    sy = y
+                    d.push
+                        x: sx / z1
+
+            ctx.moveTo d[0].x, d[0].y
+            for j in [1..3]
+                ctx.lineTo d[j].x, d[j].y
+
+            ctx.fillStyle = '#333'
+            ctx.fill()
+
+
+    get_track: (i) ->
+        i = Math.floor(i)
+        while @track.length <= i
+            @track.push { x: Math.random() * 2, y: Math.random() * 2 }
+
+
 class exports.DrawText
     constructor: (@text) ->
         # Average; will be recalculated
@@ -43,7 +88,7 @@ class exports.DrawText
     draw: (ctx, t) ->
         th = 8
         padding = 6
-        ctx.font = "#{th + 1}px Terminal";
+        ctx.font = "#{th + 1}px TratexSvart";
         unless @font_lines?
             @font_lines = []
             for line in @text.split(/\n/)
@@ -178,6 +223,7 @@ class exports.Compositor
 
     make_transition: (a, b) ->
         klass = pick_randomly exports.BlendTransition, exports.HorizontalSlideTransition, exports.VerticalSlideTransition, exports.RotateTransition
+        #klass = exports.RotateTransition
         transition = new klass(a, b)
         transition.width = @width
         transition.height = @height

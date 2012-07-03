@@ -4,7 +4,7 @@
 renderer = new Renderer
 compositor = new Compositor renderer.width, renderer.height
 setInterval ->
-    compositor.add new DrawText(pick_randomly "Hello World\nfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrobfrob\n", "\nWe ♥ GNU/Linux", "Umlaute könnten funktionieren", "Foo bar\nprint \"Hello\"\nGOTO 23\n<<</>>")
+    compositor.add new DrawText(pick_randomly "Hello", "World!")
 , 500
 
 renderer.on_drain = ->

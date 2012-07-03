@@ -36,22 +36,25 @@ class exports.Output extends process.EventEmitter
         @ack_queue = []
 
         sock = net.connect port, host, =>
+            console.log "G3D2 connected"
             @sock = sock
             # Priority
-            @send_cmd "0403"
+            @send_cmd "0404"
             # Activate input
-            @send_cmd "0901"
-            @send_cmd "01", (error, msg) =>
-                console.log "01", error, msg
+            #@send_cmd "091601"
+            @send_cmd "00", (error, msg) =>
+                console.log "00", error, msg
                 if msg
                     @width = parseInt msg.width, 10
                     @height = parseInt msg.height, 10
                     @name = msg.name
 
                 defaultPixel = if /^g3d2/.test @name then "0" else "000000"
+                console.log "initXXX", { msg, defaultPixel }
                 for y in [0..(@height - 1)]
                     @frame[y] = []
                     for x in [0..(@width - 1)]
+                        #console.log "xy", x, y, "=", defaultPixel
                         @frame[y][x] = defaultPixel
                 @emit 'init'
                 process.nextTick @loop
@@ -79,7 +82,7 @@ class exports.Output extends process.EventEmitter
                     cb new Error("Bad")
                 else
                     console.warn "Received spurious 'bad'"
-            else if (m = line.match(/^09(..)(..)(..)/))
+            else if (m = line.match(/^09..(..)(..)(..)/))
                 id = parseInt m[1], 16
                 value = parseInt m[2], 16
                 event = parseInt m[3], 16
@@ -105,6 +108,7 @@ class exports.Output extends process.EventEmitter
         sock.pipe(stream)
 
     send_cmd: (line, cb) ->
+        #console.log ">>",line
         @sock.write "#{line}\r\n"
         @ack_queue.push (error, result) =>
             @emit 'ack', error, result
@@ -150,6 +154,7 @@ class exports.Output extends process.EventEmitter
             if /^pentawallHD/.test(@name)
                 for i in [0..Math.min(@ceiling.length-1, 3)]
                     if @ceiling[i]
+                        console.log "ceil", "02F#{i+1}#{@ceiling[i]}"
                         @send_cmd "02F#{i+1}#{@ceiling[i]}"
 
             #console.log @frame.map((line) -> line.join("")).join("\n")
@@ -169,7 +174,8 @@ class exports.Output extends process.EventEmitter
             return @once 'ack', @loop
 
         lastTick = getNow()
-        @on_drain?()
+        console.log "g3d2 drain"
+        @emit 'drain'
         flushed = @flush()
         #console.log "flushed", flushed
         if flushed == true

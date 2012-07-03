@@ -56,14 +56,14 @@ normalize_frame_rgb = (frame) ->
     pixels
 
 
-output = new Output 'bender.hq.c3d2.de', 1340
+output = new Output(process.argv[2] or 'bender', parseInt(process.argv[3] or "1339", 10))
 output.on 'init', ->
 output.on_drain = ->
     if last_rect
         t1 = new Date().getTime()
-        last_rect.pixels = normalize_frame_rgb last_rect
-        t2 = new Date().getTime()
-        console.log "normalize rgb", t2 - t1
+        #last_rect.pixels = normalize_frame_rgb last_rect
+        #t2 = new Date().getTime()
+        #console.log "normalize rgb", t2 - t1
 
         if /^g3d2/.test output.name
             t1 = new Date().getTime()

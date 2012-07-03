@@ -18,18 +18,19 @@ renderer.on_drain = ->
 NTwitter = require('ntwitter');
 
 twitter = new NTwitter
-    consumer_key: "***"
-    consumer_secret: "***",
-    access_token_key: "***-***",
-    access_token_secret: "***"
+    consumer_key: "toq8i4Hf5GX8D6tmj9WXxQ"
+    consumer_secret: "ul1T7WC3NnoMMGpf2ddmoYPlZ2Vlxbe7w8QFinxw",
+    access_token_key: "61287780-DAB4VkNZRkBwhnQPTCCRRedbax9xR8jDa2xAsCtfR",
+    access_token_secret: "xn969zVJq6Idn5I6WnGwl5EHZo4gj5vqqVuyd2wGg4"
 
 twitter.stream 'user',
-    track: ["hacker", "ccc", "c3d2"
+    track: [#"hacker", "ccc"
+              "c3d2"
               "pentaradio", "pentacast"
-              "dresden"
+              "dresden", "chaos computer club"
               "Gauck", "Schramm", "Wulff"
+              "nodejs", "coffeescript", "buddycloud", "arduino", "ipv6"
             ]
-    replies: 'all'
     , (stream) ->
         stream.on 'data', (tweet) ->
             console.log('tweet', tweet)

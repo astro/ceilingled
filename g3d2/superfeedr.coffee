@@ -16,7 +16,7 @@ renderer.on_drain = ->
 
 { Superfeedr } = require('superfeedr')
 
-client = new Superfeedr("user", "***");
+client = new Superfeedr("astro", "assi");
 client.on 'connected', ->
     client.subscribe "http://en.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom", (err, feed) ->
         console.log "subscribe", err, feed
