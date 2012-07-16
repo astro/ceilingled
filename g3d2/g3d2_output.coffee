@@ -42,8 +42,8 @@ class exports.Output extends process.EventEmitter
             @send_cmd "0404"
             # Activate input
             #@send_cmd "091601"
-            @send_cmd "00", (error, msg) =>
-                console.log "00", error, msg
+            @send_cmd "01", (error, msg) =>
+                console.log "01", error, msg
                 if msg
                     @width = parseInt msg.width, 10
                     @height = parseInt msg.height, 10
@@ -123,9 +123,11 @@ class exports.Output extends process.EventEmitter
     putPixel: (x, y, r, g, b) ->
         # Workaround:
         if @name is 'PentawallHD'
+            ###
             tmp = y
             y = x
             x = tmp
+            ###
 
         # Clip
         unless x >= 0 and x < @width and y >= 0 and y < @height
