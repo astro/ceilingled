@@ -1,3 +1,7 @@
+##
+# View videos with:
+#   mplayer -vf scale=24:24
+##
 { Output } = require './g3d2_output'
 
 last_rect = null
