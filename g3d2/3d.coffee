@@ -244,7 +244,7 @@ drawTrack = (ctx) ->
 
 { Renderer } = require './render'
 
-renderer = new Renderer
+renderer = new Renderer 'bender', 1340
 renderer.output.on 'init', ->
     W = renderer.output.width
     H = renderer.output.height

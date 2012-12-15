@@ -39,7 +39,7 @@ class exports.Output extends process.EventEmitter
             console.log "G3D2 connected"
             @sock = sock
             # Priority
-            @send_cmd "0404"
+            @send_cmd "0403"
             # Activate input
             #@send_cmd "091601"
             @send_cmd "01", (error, msg) =>
@@ -91,6 +91,8 @@ class exports.Output extends process.EventEmitter
                     @emit input.type, input.id, value
                 else
                     console.log "Unknown input", event, id, value
+            else if /^00/.test line
+                console.log "<<", line.slice(2)
             else if /^\d/.test line
                 console.log "Unrecognized message", line
             else if (m = line.match(/^([a-z].+?)=(.+)/))
@@ -157,7 +159,7 @@ class exports.Output extends process.EventEmitter
                 for i in [0..Math.min(@ceiling.length-1, 3)]
                     if @ceiling[i]
                         console.log "ceil", "02F#{i+1}#{@ceiling[i]}"
-                        @send_cmd "02F#{i+1}#{@ceiling[i]}"
+                        #@send_cmd "02F#{i+1}#{@ceiling[i]}"
 
             #console.log @frame.map((line) -> line.join("")).join("\n")
             frame = @frame.map((line) -> line.join("")).join("")

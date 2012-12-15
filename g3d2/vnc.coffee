@@ -56,9 +56,11 @@ normalize_frame_rgb = (frame) ->
     pixels
 
 
-output = new Output(process.argv[2] or 'bender', parseInt(process.argv[3] or "1339", 10))
+output = new Output(process.argv[2] or 'bender', parseInt(process.argv[3] or "1342", 10))
 output.on 'init', ->
-output.on_drain = ->
+    req_update()
+on_drain = ->
+    console.log "on_drain"
     if last_rect
         t1 = new Date().getTime()
         #last_rect.pixels = normalize_frame_rgb last_rect
@@ -79,6 +81,9 @@ output.on_drain = ->
                 else
                     #console.log "x", x, "y", y, "rgb", rgb...
                     output.putPixel x, y, rgb...
+    else
+        setTimeout on_drain, 100
+output.on 'drain', on_drain
 
 {VNCClient} = require('vnc-client')
 
@@ -86,6 +91,7 @@ output.on_drain = ->
 vnc = new VNCClient("localhost", 0, "secret")
 
 req_update = ->
+    #console.log "req_update", xOffset, yOffset, output.width, output.height
     vnc.requestUpdate xOffset, yOffset, output.width, output.height
 
 vnc.on 'init', (params) ->
@@ -94,5 +100,6 @@ vnc.on 'init', (params) ->
 
 vnc.on 'rect', (rect) ->
     last_rect = rect
+    #console.log "vnc rect", rect.pixels.toString()
     req_update()
 
